@@ -292,11 +292,16 @@ mc_update() {
 		fi
 
 		### update craftbukkit
-
 		echo "Updating craftbukkit...."
-
-		CB_URL="http://ci.bukkit.org/job/dev-CraftBukkit/lastSuccessfulBuild/artifact/target/"
-		CB_SERVER_URL=$CB_URL`wget -q -O - $CB_URL | grep \>craftbukkit | cut -d \" -f 30`
+		case $CB_RELEASE in
+			unstable|UNSTABLE|Unstable|dev|development)
+				CB_URL="http://ci.bukkit.org/job/dev-CraftBukkit/lastSuccessfulBuild/artifact/target/"
+				CB_SERVER_URL=$CB_URL`wget -q -O - $CB_URL | grep \>craftbukkit | cut -d \" -f 30`
+				;;
+			*)
+			CB_SERVER_URL="http://cbukk.it/craftbukkit.jar"
+			;;
+		esac
 		as_user "cd $MCPATH && wget -q -O $MCPATH/craftbukkit.jar.update $CB_SERVER_URL"
 		if [ -f $MCPATH/craftbukkit.jar.update ]
 		then
@@ -365,7 +370,13 @@ start_overviewer() {
 
 	fi
 }
-
+is_running(){
+	if ps ax | grep -v grep | grep -v -i SCREEN | grep $SERVICE > /dev/null
+	then
+		return 0
+	fi
+	return 1
+}
 
 case "$1" in
 	start)
@@ -408,10 +419,19 @@ case "$1" in
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say Backup complete.\"\015'"
 		;;
 	whole-backup)
-		# Backup everything
-		error_if_running "Can't do that while server is running."
-		mc_whole_backup
-		;;
+                # Backup everything
+                if is_running; then
+                    as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER WHOLE-BACKUP IN 10 SECONDS.\"\015'"
+                    mc_stop
+                    to_disk
+                    mc_whole_backup
+                    check_links
+                    mc_start
+                else
+                    to_disk
+                    mc_whole_backup
+                fi
+                ;;
 	update)
 		#update minecraft_server.jar and craftbukkit.jar (thanks karrth)
 		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"say SERVER UPDATE IN 10 SECONDS.\"\015'"
@@ -464,7 +484,8 @@ case "$1" in
 		fi
 		;;
 	version)
-		echo Craftbukkit version `awk '/Craftbukkit/ {sub(/\)/, ""); print $12}' $MCPATH/server.log`
+		as_user "screen -p 0 -S $SCREEN -X eval 'stuff \"version\"\015'"
+		tac $MCPATH/server.log | grep -m 1 "This server is running"
 		;;
 	links)
 		check_links
