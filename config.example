@@ -45,6 +45,9 @@ BACKUPPATH="/home/${USERNAME}/mcbackup/worlds"
 # Format for world backup (tar or zip).
 BACKUPFORMAT="tar"  
 
+# Whether to output commands for the plugin ConsoleLikeChat ($1 is the command to run)
+FORMAT='$1'
+
 # Normally backups will be put in a subfolder to $BACKUPPATH with todays date
 # and the backups themselves will have a timestamp.
 
@@ -74,7 +77,7 @@ WORLDSTORAGE="${MCPATH}/worldstorage"
 # Where the Map is generated
 OUTPUTMAP="/home/${USERNAME}/mcmap"
 
-# Path to Minecraft-Overviewer
+# Path to Minecraft-Overviewer. If using an APT repository installed version, set to: "apt".
 OVPATH="/home/${USERNAME}/Minecraft-Overviewer"
 
 # Path for the config file of Overviewer
