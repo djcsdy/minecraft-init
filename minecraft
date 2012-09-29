@@ -201,9 +201,15 @@ get_worlds() {
 }
 mc_whole_backup() {
 	echo "backing up entire setup into $WHOLEBACKUP"
-	as_user "mkdir -p $WHOLEBACKUP"
 	path=`datepath $WHOLEBACKUP/mine_`
-	as_user "cp -rP $MCPATH $path"
+	as_user "mkdir -p $path"
+	
+	if [ "$COMPRESS_WHOLEBACKUP" ]
+	then
+		as_user "tar -cpjf $path/whole-backup.tar.bz2 $MCPATH"
+	else
+		as_user "tar -cpf $path/whole-backup.tar $MCPATH"
+	fi
 }
 mc_world_backup() {
 	#
@@ -314,7 +320,7 @@ mc_update() {
 	else
 		# Update minecraft_server.jar
 		echo "Updating minecraft_server.jar...."
-		MC_SERVER_URL=`wget -q -O - http://www.minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
+		MC_SERVER_URL=`wget -q -O - http://minecraft.net/download | grep minecraft_server.jar\  | cut -d \" -f 6`
 		as_user "cd $MCPATH && wget -q -O $MCPATH/minecraft_server.jar.update $MC_SERVER_URL"
 		if [ -f $MCPATH/minecraft_server.jar.update ]
 		then
